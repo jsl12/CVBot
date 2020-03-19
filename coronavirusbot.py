@@ -1,8 +1,12 @@
 import logging
-from pathlib import Path
 import re
+from pathlib import Path
+
 import discord
+import pandas as pd
 import yaml
+
+from load import death_stats, confirmed_stats
 
 logger = logging.getLogger(__name__)
 
@@ -20,6 +24,14 @@ class CoronaVirusBot:
         m = self.REGEX.search(msg.content)
         if m is not None:
             return f"found 'corona' or 'virus' in a message from {msg.author}"
+
+    @property
+    def deaths(self) -> pd.DataFrame:
+        return death_stats()
+
+    @property
+    def confirmed(self) -> pd.DataFrame:
+        return confirmed_stats()
 
 if __name__ == '__main__':
     logging.basicConfig(level=logging.INFO)
