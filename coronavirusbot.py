@@ -23,7 +23,10 @@ class CoronaVirusBot:
     def process_message(self, msg: discord.Message):
         m = self.REGEX.search(msg.content)
         if m is not None:
-            return f"found 'corona' or 'virus' in a message from {msg.author}"
+            if '#usadeaths' in msg.content:
+                return f'{death_stats()["US"].max().sum()}'
+            elif '#txdeaths' in msg.content:
+                return f'{death_stats()["US"]["Texas"].max().sum()}'
 
     @property
     def deaths(self) -> pd.DataFrame:
