@@ -2,6 +2,8 @@ import logging
 
 import discord
 
+from . import load
+from . import utils
 from .cvbot import CoronaVirusBot
 
 logger = logging.getLogger(__name__)

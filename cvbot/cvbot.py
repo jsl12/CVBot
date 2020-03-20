@@ -3,13 +3,14 @@ import re
 
 import discord
 
-from . import load
+from . import load, utils
 
 logger = logging.getLogger(__name__)
 
 class CoronaVirusBot:
     REGEX = re.compile(f'(corona|virus)', re.IGNORECASE)
     STAT_REGEX = re.compile(f'#([\w ]+)-(deaths|cases|recovered)')
+    COMPARE_REGEX = re.compile(f'^#compare', re.IGNORECASE)
 
     def __init__(self):
         self.client = discord.Client()
@@ -19,25 +20,33 @@ class CoronaVirusBot:
         self.client.run(apikey)
 
     def process_message(self, msg: discord.Message):
-        m = self.STAT_REGEX.search(msg.content)
-        if m is not None:
-            if m.group(2) == 'deaths':
+        match = self.STAT_REGEX.search(msg.content)
+        c_match = self.COMPARE_REGEX.search(msg.content)
+
+        if match is not None:
+            if match.group(2) == 'deaths':
                 stats = load.death_stats()
-            elif m.group(2) == 'cases':
+            elif match.group(2) == 'cases':
                 stats = load.confirmed_stats()
-            elif m.group(2) == 'recovered':
+            elif match.group(2) == 'recovered':
                 stats = load.recovered_stats()
 
             try:
-                stats = stats[m.group(1)]
+                stats = stats[match.group(1)]
             except KeyError as e:
-                logging.info(f'trying to parse {m.group(1)} as a US state')
+                logging.info(f'trying to parse {match.group(1)} as a US state')
 
                 try:
-                    stats = stats['US'][m.group(1)]
+                    stats = stats['US'][match.group(1)]
                 except KeyError as e:
-                    logger.warning(f'Invalid key: {m.group(1)}')
+                    logger.warning(f'Invalid key: {match.group(1)}')
                 else:
                     return f'{stats.max().sum()}'
             else:
                 return f'{stats.max().sum()}'
+
+        elif c_match is not None:
+            res = utils.compare(load.confirmed_stats(), msg.content[9:].split('-'))
+            res.index = res.index.to_series().apply(lambda t: f'{t.days} days')
+            # res.index.name = 'Days since first case'
+            return utils.df_to_str(res, 2)
