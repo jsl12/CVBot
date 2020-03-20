@@ -3,7 +3,7 @@ import logging
 import discord
 
 from . import load
-from .parser import CV_PARSER
+from .parser import CV_PARSER, parse_args
 
 logger = logging.getLogger(__name__)
 
@@ -16,9 +16,9 @@ class CoronaVirusBot:
         self.client.run(apikey)
 
     def process_message(self, msg: discord.Message):
-        if self.client.user in msg.mentions:
+        if self.client.user in msg.mentions and msg.content[0] == '<':
             try:
-                args = CV_PARSER.parse_args(msg.content.split(' ')[1:])
+                args = parse_args(CV_PARSER, msg.content, skip=1)
             except Exception as e:
                 return repr(e)
             else:
@@ -32,9 +32,14 @@ class CoronaVirusBot:
                 try:
                     res = df[args.country].sum(axis=1)
                 except KeyError as e:
-                    return repr(e)
+                    logger.info(f'trying to parse {args.country} as a US state')
+                    try:
+                        res = df['US'][args.country].iloc[:,0]
+                    except KeyError as e:
+                        return repr(e)
 
                 if args.series:
+                    res = res[res > 0]
                     return str(res)
                 else:
                     return res.values[-1]

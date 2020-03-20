@@ -1,5 +1,7 @@
 import argparse
 
+import shlex
+
 """
 @CVBot cases Italy
 @CVBot compare cases Italy US
@@ -16,6 +18,9 @@ recovered...
 class CVParseException(Exception):
     pass
 
+
+def parse_args(parser: argparse.ArgumentParser, cmd_str: str, skip: int = 1):
+    return parser.parse_args(shlex.split(cmd_str)[skip:])
 
 class ErrorCatchingArgumentParser(argparse.ArgumentParser):
     def exit(self, status=0, message=None):
