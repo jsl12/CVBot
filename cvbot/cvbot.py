@@ -37,5 +37,7 @@ class CoronaVirusBot:
                     stats = stats['US'][m.group(1)]
                 except KeyError as e:
                     logger.warning(f'Invalid key: {m.group(1)}')
-
-            return f'{stats.max().sum()}'
+                else:
+                    return f'{stats.max().sum()}'
+            else:
+                return f'{stats.max().sum()}'
