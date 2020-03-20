@@ -1,17 +1,15 @@
 import logging
 import re
-from pathlib import Path
 
 import discord
-import pandas as pd
-import yaml
 
-from .load import death_stats, confirmed_stats
+from . import load
 
 logger = logging.getLogger(__name__)
 
 class CoronaVirusBot:
     REGEX = re.compile(f'(corona|virus)', re.IGNORECASE)
+    STAT_REGEX = re.compile(f'#([\w ]+)-(deaths|cases|recovered)')
 
     def __init__(self):
         self.client = discord.Client()
@@ -21,17 +19,23 @@ class CoronaVirusBot:
         self.client.run(apikey)
 
     def process_message(self, msg: discord.Message):
-        m = self.REGEX.search(msg.content)
+        m = self.STAT_REGEX.search(msg.content)
         if m is not None:
-            if '#usadeaths' in msg.content:
-                return f'{death_stats()["US"].max().sum()}'
-            elif '#txdeaths' in msg.content:
-                return f'{death_stats()["US"]["Texas"].max().sum()}'
+            if m.group(2) == 'deaths':
+                stats = load.death_stats()
+            elif m.group(2) == 'cases':
+                stats = load.confirmed_stats()
+            elif m.group(2) == 'recovered':
+                stats = load.recovered_stats()
 
-    @property
-    def deaths(self) -> pd.DataFrame:
-        return death_stats()
+            try:
+                stats = stats[m.group(1)]
+            except KeyError as e:
+                logging.info(f'trying to parse {m.group(1)} as a US state')
 
-    @property
-    def confirmed(self) -> pd.DataFrame:
-        return confirmed_stats()
+                try:
+                    stats = stats['US'][m.group(1)]
+                except KeyError as e:
+                    logger.warning(f'Invalid key: {m.group(1)}')
+
+            return f'{stats.max().sum()}'
