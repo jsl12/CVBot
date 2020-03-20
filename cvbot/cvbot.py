@@ -35,30 +35,3 @@ class CoronaVirusBot:
     @property
     def confirmed(self) -> pd.DataFrame:
         return confirmed_stats()
-
-if __name__ == '__main__':
-    logging.basicConfig(level=logging.INFO)
-    yaml_path = Path(r'C:\Users\lanca_000\Documents\Software\Python\CVBot\apikey.yaml')
-    CHANNEL_WHITELIST = ['robotics-facility']
-
-    with yaml_path.open('r') as file:
-        apikey = yaml.load(file, Loader=yaml.SafeLoader)['DISCORD_TOKEN']
-
-    cvbot = CoronaVirusBot()
-
-    @cvbot.client.event
-    async def on_ready():
-        logger.info(f'ready as {cvbot.client.user}')
-
-    @cvbot.client.event
-    async def on_message(msg: discord.Message):
-        if msg.author == cvbot.client.user:
-            return
-        elif msg.channel.name != 'robotics-facility':
-            return
-        else:
-            response = cvbot.process_message(msg)
-            if response is not None:
-                await msg.channel.send(response)
-
-    cvbot.run(apikey)
