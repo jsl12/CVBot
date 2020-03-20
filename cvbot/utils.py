@@ -37,3 +37,17 @@ def col_sizes(df: pd.DataFrame):
         for i, val
         in df.applymap(lambda val: len(f'{val:.0f}')).max().iteritems()
     ]
+
+
+def double_period(data: pd.Series) -> pd.Series:
+    def func(row):
+        nonlocal data
+        below = data[data < row[1]]
+        if len(below.index) <= 0:
+            return 0
+        else:
+            return (row[0] - below.index[-1]).days
+    threshold = pd.DataFrame([data.index, data.values / 2]).transpose()
+    res = threshold.apply(func, axis=1)
+    res.index = data.index
+    return res
