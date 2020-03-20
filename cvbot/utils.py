@@ -40,6 +40,8 @@ def col_sizes(df: pd.DataFrame):
 
 
 def double_period(data: pd.Series) -> pd.Series:
+    data = data if isinstance(data, pd.Series) else data.sum(axis=1)
+
     def func(row):
         nonlocal data
         below = data[data < row[1]]

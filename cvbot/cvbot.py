@@ -11,7 +11,7 @@ class CoronaVirusBot:
     REGEX = re.compile(f'(corona|virus)', re.IGNORECASE)
     STAT_REGEX = re.compile(f'#([\w ,]+)-(deaths|cases|recovered)')
     COMPARE_REGEX = re.compile(f'^#compare', re.IGNORECASE)
-    DOUBLE_REGEX = re.compile(f'^#double-([\w ]+)', re.IGNORECASE)
+    DOUBLE_REGEX = re.compile(f'^#double-([\w ,]+)', re.IGNORECASE)
 
     def __init__(self):
         self.client = discord.Client()
@@ -64,3 +64,7 @@ class CoronaVirusBot:
         elif d_match is not None:
             res = utils.double_period(load.confirmed_stats()[d_match.group(1)].apply(sum, axis=1))
             return str(res)
+
+        elif '#top10' in msg.content:
+            data = load.confirmed_stats().iloc[-1].sort_values(ascending=False).iloc[:10].reset_index(level=['Lat', 'Long'], drop=True)
+            return '\n'.join([f'{i[0]}, {i[1]} - {row}' for i, row in data.iteritems()]).replace(', nan', '')
