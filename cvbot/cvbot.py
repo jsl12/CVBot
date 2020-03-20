@@ -17,6 +17,9 @@ class CoronaVirusBot:
 
     def process_message(self, msg: discord.Message):
         if self.client.user in msg.mentions and msg.content[0] == '<':
+            if ('-h' in msg.content) or ('--help' in msg.content):
+                return CV_PARSER.format_help()
+
             try:
                 args = parse_args(CV_PARSER, msg.content, skip=1)
             except Exception as e:

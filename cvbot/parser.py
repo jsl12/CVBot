@@ -30,9 +30,9 @@ class ErrorCatchingArgumentParser(argparse.ArgumentParser):
 
 
 CV_PARSER = ErrorCatchingArgumentParser()
-CV_PARSER.add_argument('command', type=str, help='Place to get stats from')
-CV_PARSER.add_argument('country', type=str, help='Country to get stats from')
-CV_PARSER.add_argument('-s', '--series', action='store_true', help='Return series')
+CV_PARSER.add_argument('command', type=str, help='Type of stats to get: cases, deaths, or recovered')
+CV_PARSER.add_argument('country', type=str, help='Country to get stats from. Also works with US states')
+CV_PARSER.add_argument('-s', '--series', action='store_true', help='Return a time series')
 
 
 if __name__ == '__main__':
