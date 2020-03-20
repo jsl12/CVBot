@@ -6,7 +6,7 @@ import discord
 import pandas as pd
 import yaml
 
-from load import death_stats, confirmed_stats
+from .load import death_stats, confirmed_stats
 
 logger = logging.getLogger(__name__)
 
@@ -38,7 +38,7 @@ class CoronaVirusBot:
 
 if __name__ == '__main__':
     logging.basicConfig(level=logging.INFO)
-    yaml_path = Path(r'D:\Discord\coronavirusbot\apikey.yaml')
+    yaml_path = Path(r'C:\Users\lanca_000\Documents\Software\Python\CVBot\apikey.yaml')
     CHANNEL_WHITELIST = ['robotics-facility']
 
     with yaml_path.open('r') as file:
