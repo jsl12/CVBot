@@ -1,42 +1,12 @@
-import numpy as np
+import logging
+from typing import List
+
 import pandas as pd
 
+from . import load
+from .parser import parse_args_shlex, CV_PARSER
 
-def compare(df: pd.DataFrame, indices, all=False):
-    res = pd.DataFrame(data={s.index.name: s for s in [convert(df, i) for i in indices]})
-    if not all:
-        res = res.dropna().astype(np.dtype('int64'))
-    return res
-
-
-def convert(df: pd.DataFrame, index: str):
-    res = df[index].apply(sum, axis=1)
-    res = res[res > 0]
-    res.index = res.index.to_series().apply(lambda d: d - res.index[0])
-    res.index.name = index
-    return res
-
-
-def df_to_str(df: pd.DataFrame, padding=2) -> str:
-    col_widths = [len(str(df.index.name)) + padding] + [s + padding for s in col_sizes(df)]
-    res = ''.rjust(col_widths[0])
-    for i, width in enumerate(col_widths[1:]):
-        res += str(df.columns[i]).rjust(width)
-    res += '\n'
-    for i, row in df.iterrows():
-        res += str(i).rjust(col_widths[0])
-        for col, val in row.items():
-            res += f'{val:.0f}'.rjust(col_widths[row.index.get_loc(col)+1])
-        res += '\n'
-    return res
-
-
-def col_sizes(df: pd.DataFrame):
-    return [
-        len(str(i)) if len(str(i)) > val else val
-        for i, val
-        in df.applymap(lambda val: len(f'{val:.0f}')).max().iteritems()
-    ]
+logger = logging.getLogger(__name__)
 
 
 def double_period(df: pd.DataFrame) -> pd.DataFrame:
@@ -51,4 +21,38 @@ def double_period(df: pd.DataFrame) -> pd.DataFrame:
         data={col: [last_half(df[col], val, date) for date, val in df[col].iteritems()] for col in df.columns},
         index=df.index
     )
+    return res
+
+
+def parse_report(input_str: str, skip=1):
+    args = parse_args_shlex(CV_PARSER, input_str, skip=skip)
+    return report(
+        places=args.places,
+        command=args.command,
+        double=args.double,
+        series=args.series
+    )
+
+
+def report(places: List[str], command: str, double: bool, series: bool):
+    CMD_MAP = {
+        'cases': load.confirmed_stats,
+        'deaths': load.death_stats,
+        'recovered': load.recovered_stats
+    }
+    df = CMD_MAP[command]()
+
+    try:
+        res = df[places].groupby(level=0, axis=1).sum()
+    except KeyError as e:
+        logger.info(f'Invalid key(s) {[p for p in places if p not in df.columns]}')
+
+    if double:
+        res = double_period(res)
+    elif not series:
+        return ' '.join(res.iloc[-1].apply(lambda v: str(int(v)) if not pd.isnull(v) else '').values.tolist())
+
+    # remove rows of all 0s
+    res = res[~res.apply(lambda row: (row == 0).all(), axis=1)]
+
     return res
