@@ -9,21 +9,6 @@ from .parser import parse_args_shlex, CV_PARSER
 logger = logging.getLogger(__name__)
 
 
-def double_period(df: pd.DataFrame) -> pd.DataFrame:
-    def last_half(s: pd.Series, val, date):
-        try:
-            last_date = s[s < (val / 2)].index[-1]
-        except IndexError:
-            return 0
-        return (date - last_date).days
-
-    res = pd.DataFrame(
-        data={col: [last_half(df[col], val, date) for date, val in df[col].iteritems()] for col in df.columns},
-        index=df.index
-    )
-    return res
-
-
 def parse_report(input_str: str, skip=1) -> pd.DataFrame:
     args = parse_args_shlex(CV_PARSER, input_str, skip=skip)
     return report(
@@ -54,4 +39,19 @@ def report(places: List[str], command: str, double: bool, series: bool) -> pd.Da
     # remove rows of all 0s
     res = res[~res.apply(lambda row: (row == 0).all(), axis=1)]
 
+    return res
+
+
+def double_period(df: pd.DataFrame) -> pd.DataFrame:
+    def last_half(s: pd.Series, val, date):
+        try:
+            last_date = s[s < (val / 2)].index[-1]
+        except IndexError:
+            return 0
+        return (date - last_date).days
+
+    res = pd.DataFrame(
+        data={col: [last_half(df[col], val, date) for date, val in df[col].iteritems()] for col in df.columns},
+        index=df.index
+    )
     return res
