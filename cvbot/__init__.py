@@ -5,6 +5,7 @@ import discord
 from . import load
 from . import utils
 from .cvbot import CoronaVirusBot
+from .cvbot import parse_report
 
 logger = logging.getLogger(__name__)
 
