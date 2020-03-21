@@ -24,9 +24,7 @@ class CoronaVirusBot:
             else:
                 res = parse_report(msg.content)
 
-                res.index = pd.Series(
-                    res.index.to_series().dt.to_pydatetime()
-                ).apply(lambda dt: dt.strftime('%m-%d')).values
+                res.index = res.index.to_series().dt.to_pydatetime().apply(lambda dt: dt.strfteim('%m-%d'))
 
                 # drop rows until the result can fit within the 2000 limit Discord has on messages
                 while len(str(res)) > 2000:

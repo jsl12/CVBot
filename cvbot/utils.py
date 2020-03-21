@@ -3,7 +3,7 @@ from typing import List
 
 import pandas as pd
 
-from . import load
+from .load import CMD_MAP
 from .parser import parse_args_shlex, CV_PARSER
 
 logger = logging.getLogger(__name__)
@@ -24,7 +24,7 @@ def double_period(df: pd.DataFrame) -> pd.DataFrame:
     return res
 
 
-def parse_report(input_str: str, skip=1):
+def parse_report(input_str: str, skip=1) -> pd.DataFrame:
     args = parse_args_shlex(CV_PARSER, input_str, skip=skip)
     return report(
         places=args.places,
@@ -34,12 +34,7 @@ def parse_report(input_str: str, skip=1):
     )
 
 
-def report(places: List[str], command: str, double: bool, series: bool):
-    CMD_MAP = {
-        'cases': load.confirmed_stats,
-        'deaths': load.death_stats,
-        'recovered': load.recovered_stats
-    }
+def report(places: List[str], command: str, double: bool, series: bool) -> pd.DataFrame:
     df = CMD_MAP[command]()
 
     try:
@@ -50,7 +45,11 @@ def report(places: List[str], command: str, double: bool, series: bool):
     if double:
         res = double_period(res)
     elif not series:
-        return ' '.join(res.iloc[-1].apply(lambda v: str(int(v)) if not pd.isnull(v) else '').values.tolist())
+        res = pd.DataFrame(
+            data=[res.iloc[-1]],
+            index=[res.index[-1]],
+            columns=places
+        )
 
     # remove rows of all 0s
     res = res[~res.apply(lambda row: (row == 0).all(), axis=1)]
