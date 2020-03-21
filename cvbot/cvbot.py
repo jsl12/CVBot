@@ -1,8 +1,9 @@
 import logging
 
 import discord
+import pandas as pd
 
-from . import load
+from . import load, utils
 from .parser import CV_PARSER, parse_args
 
 logger = logging.getLogger(__name__)
@@ -33,7 +34,11 @@ class CoronaVirusBot:
                 df = CMD_MAP[args.command]()
 
                 try:
-                    res = df[args.country].sum(axis=1)
+                    if args.compare:
+                        countries = [args.country] + args.compare
+                    else:
+                        countries = [args.country]
+                    res = df[countries].groupby(level=0, axis=1).sum()
                 except KeyError as e:
                     logger.info(f'trying to parse {args.country} as a US state')
                     try:
@@ -41,8 +46,8 @@ class CoronaVirusBot:
                     except KeyError as e:
                         return repr(e)
 
-                if args.series:
-                    res = res[res > 0]
-                    return str(res)
-                else:
-                    return res.values[-1]
+                if args.double:
+                    res = utils.double_period(res)
+                elif not args.series:
+                    return ' '.join(res.iloc[-1].apply(lambda v: str(int(v)) if not pd.isnull(v) else '').values.tolist())
+                return str(res.applymap(int))

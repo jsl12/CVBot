@@ -39,17 +39,16 @@ def col_sizes(df: pd.DataFrame):
     ]
 
 
-def double_period(data: pd.Series) -> pd.Series:
-    data = data if isinstance(data, pd.Series) else data.sum(axis=1)
-
-    def func(row):
-        nonlocal data
-        below = data[data < row[1]]
-        if len(below.index) <= 0:
+def double_period(df: pd.DataFrame) -> pd.DataFrame:
+    def last_half(s: pd.Series, val, date):
+        try:
+            last_date = s[s < (val / 2)].index[-1]
+        except IndexError:
             return 0
-        else:
-            return (row[0] - below.index[-1]).days
-    threshold = pd.DataFrame([data.index, data.values / 2]).transpose()
-    res = threshold.apply(func, axis=1)
-    res.index = data.index
+        return (date - last_date).days
+
+    res = pd.DataFrame(
+        data={col: [last_half(df[col], val, date) for date, val in df[col].iteritems()] for col in df.columns},
+        index=df.index
+    )
     return res

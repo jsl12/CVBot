@@ -23,4 +23,4 @@ async def on_message(msg: discord.Message):
     else:
         response = cvbot.process_message(msg)
         if response is not None:
-            await msg.channel.send(response)
+            await msg.channel.send(response[:2000])

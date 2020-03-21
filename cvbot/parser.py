@@ -22,6 +22,7 @@ class CVParseException(Exception):
 def parse_args(parser: argparse.ArgumentParser, cmd_str: str, skip: int = 1):
     return parser.parse_args(shlex.split(cmd_str)[skip:])
 
+
 class ErrorCatchingArgumentParser(argparse.ArgumentParser):
     def exit(self, status=0, message=None):
         if status:
@@ -33,8 +34,5 @@ CV_PARSER = ErrorCatchingArgumentParser()
 CV_PARSER.add_argument('command', type=str, help='Type of stats to get: cases, deaths, or recovered')
 CV_PARSER.add_argument('country', type=str, help='Country to get stats from. Also works with US states')
 CV_PARSER.add_argument('-s', '--series', action='store_true', help='Return a time series')
-
-
-if __name__ == '__main__':
-    args = CV_PARSER.parse_args('cases Italy --series'.split(' '))
-    CV_PARSER.print_help()
+CV_PARSER.add_argument('-d', '--double', action='store_true', help='Return the doubling time')
+CV_PARSER.add_argument('-c', '--compare', nargs='+', help='Compare to this place')
