@@ -33,12 +33,13 @@ class CoronaVirusBot:
                 }
                 df = CMD_MAP[args.command]()
 
+                if args.compare:
+                    places = [args.country] + args.compare
+                else:
+                    places = [args.country]
+
                 try:
-                    if args.compare:
-                        countries = [args.country] + args.compare
-                    else:
-                        countries = [args.country]
-                    res = df[countries].groupby(level=0, axis=1).sum()
+                    res = df[places].groupby(level=0, axis=1).sum()
                 except KeyError as e:
                     logger.info(f'trying to parse {args.country} as a US state')
                     try:
@@ -50,4 +51,12 @@ class CoronaVirusBot:
                     res = utils.double_period(res)
                 elif not args.series:
                     return ' '.join(res.iloc[-1].apply(lambda v: str(int(v)) if not pd.isnull(v) else '').values.tolist())
-                return str(res.applymap(int))
+
+                # remove rows of all 0s
+                res = res[~res.apply(lambda row: (row == 0).all(), axis=1)]
+
+                # drop rows until the result can fit within the 2000 limit Discord has on messages
+                while len(str(res)) > 2000:
+                    res = res.iloc[1:]
+
+                return str(res)
