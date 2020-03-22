@@ -2,7 +2,7 @@ import logging
 from typing import List
 
 import pandas as pd
-
+from datetime import timedelta
 from .load import CMD_MAP
 from .parser import parse_args_shlex, CV_PARSER
 
@@ -15,29 +15,38 @@ def parse_report(input_str: str, skip=1) -> pd.DataFrame:
         places=args.places,
         command=args.command,
         double=args.double,
-        series=args.series
+        series=args.series,
+        normalize=args.normalize
     )
 
 
-def report(places: List[str], command: str, double: bool, series: bool) -> pd.DataFrame:
+def report(
+        places: List[str],
+        command: str,
+        double: bool = False,
+        series: bool = False,
+        normalize: bool = False
+) -> pd.DataFrame:
     df = CMD_MAP[command]()
 
     try:
         res = df[places].groupby(level=0, axis=1).sum()
+        res = res[~res.apply(lambda row: (row == 0).all(), axis=1)]
     except KeyError as e:
         logger.info(f'Invalid key(s) {[p for p in places if p not in df.columns]}')
 
+    if normalize:
+        res = normalize_index(res)
+
     if double:
         res = double_period(res)
-    elif not series:
+
+    if not series and not (double or normalize):
         res = pd.DataFrame(
             data=[res.iloc[-1]],
             index=[res.index[-1]],
             columns=places
         )
-
-    # remove rows of all 0s
-    res = res[~res.apply(lambda row: (row == 0).all(), axis=1)]
 
     return res
 
@@ -55,3 +64,15 @@ def double_period(df: pd.DataFrame) -> pd.DataFrame:
         index=df.index
     )
     return res
+
+
+def normalize_index(df: pd.DataFrame):
+    data = {col: trim_start(df[col]) for col in df.columns}
+    data = {col: data[col].set_axis(data[col].index.to_series().apply(lambda d: (d - data[col].index[0]).days).values) for col in data}
+    res = pd.DataFrame(data)
+    res.index = res.index.to_series().apply(lambda d: timedelta(days=d))
+    return res
+
+
+def trim_start(s: pd.Series, threshold: int = 0):
+    return s[s > threshold]
