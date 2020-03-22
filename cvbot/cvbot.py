@@ -1,6 +1,8 @@
 import logging
+from pathlib import Path
 
 import discord
+import matplotlib.pyplot as plt
 import pandas as pd
 
 from .parser import CV_PARSER
@@ -24,13 +26,19 @@ class CoronaVirusBot:
             else:
                 res = parse_report(msg.content)
 
-                res = res.applymap(lambda v: f'{v:.0f}')
+                if isinstance(res, pd.DataFrame):
+                    res = res.applymap(lambda v: f'{v:.0f}')
 
-                if isinstance(res.index, pd.DatetimeIndex):
-                    res.index = res.index.to_series().apply(lambda v: f'{v.to_pydatetime().strftime("%m-%d")}')
+                    if isinstance(res.index, pd.DatetimeIndex):
+                        res.index = res.index.to_series().apply(lambda v: f'{v.to_pydatetime().strftime("%m-%d")}')
 
-                # drop rows until the result can fit within the 2000 limit Discord has on messages
-                while len(str(res)) > 2000:
-                    res = res.iloc[1:]
+                    # drop rows until the result can fit within the 2000 limit Discord has on messages
+                    while len(str(res)) > 2000:
+                        res = res.iloc[1:]
 
-                return str(res)
+                    return str(res)
+
+                elif isinstance(res, plt.Figure):
+                    dest = Path.cwd() / 'res.png'
+                    res.savefig(dest, format='png')
+                    return dest

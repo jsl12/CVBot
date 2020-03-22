@@ -36,6 +36,7 @@ CV_PARSER.add_argument('places', metavar='PLACE', type=str, nargs='+', help='Pla
 CV_PARSER.add_argument('-s', '--series', action='store_true', help='Return a time series')
 CV_PARSER.add_argument('-d', '--double', action='store_true', help='Return the doubling time')
 CV_PARSER.add_argument('-n', '--normalize', action='store_true', help='Normalize each series to its start date')
+CV_PARSER.add_argument('-p', '--plot', action='store_true', default=False, help='Normalize each series to its start date')
 
 if __name__ == '__main__':
     CV_PARSER.parse_args(shlex.split('cases Italy US China'))

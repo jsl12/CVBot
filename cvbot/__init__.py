@@ -1,8 +1,10 @@
 import logging
+from pathlib import Path
 
 import discord
 
 from . import load
+from . import plot
 from . import utils
 from .cvbot import CoronaVirusBot
 from .utils import parse_report
@@ -24,4 +26,7 @@ async def on_message(msg: discord.Message):
     else:
         response = cvbot.process_message(msg)
         if response is not None:
-            await msg.channel.send(response[:2000])
+            if isinstance(response, str):
+                await msg.channel.send(response[:2000])
+            elif isinstance(response, Path):
+                await msg.channel.send(file=discord.File(response.open('rb')))

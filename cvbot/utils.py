@@ -1,10 +1,12 @@
 import logging
+from datetime import timedelta
 from typing import List
 
 import pandas as pd
-from datetime import timedelta
+
 from .load import CMD_MAP
 from .parser import parse_args_shlex, CV_PARSER
+from .plot import cv_plot
 
 logger = logging.getLogger(__name__)
 
@@ -16,7 +18,8 @@ def parse_report(input_str: str, skip=1) -> pd.DataFrame:
         command=args.command,
         double=args.double,
         series=args.series,
-        normalize=args.normalize
+        normalize=args.normalize,
+        plot=args.plot
     )
 
 
@@ -25,7 +28,8 @@ def report(
         command: str,
         double: bool = False,
         series: bool = False,
-        normalize: bool = False
+        normalize: bool = False,
+        plot: bool = False
 ) -> pd.DataFrame:
     df = CMD_MAP[command]()
 
@@ -48,7 +52,12 @@ def report(
             columns=places
         )
 
-    return res
+    if plot:
+        if normalize:
+            res.index = res.index.to_series().apply(lambda v: v.days)
+        return cv_plot(res)
+    else:
+        return res
 
 
 def double_period(df: pd.DataFrame) -> pd.DataFrame:
