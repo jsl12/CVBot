@@ -41,23 +41,24 @@ def report(
 
     if normalize:
         res = normalize_index(res)
+        res.index = res.index.to_series().apply(lambda v: v.days)
+        series = True
 
     if double:
         res = double_period(res)
+        series = True
 
-    if not series and not (double or normalize):
+    if plot:
+        return cv_plot(res)
+
+    if not series:
         res = pd.DataFrame(
             data=[res.iloc[-1]],
             index=[res.index[-1]],
             columns=places
         )
 
-    if plot:
-        if normalize:
-            res.index = res.index.to_series().apply(lambda v: v.days)
-        return cv_plot(res)
-    else:
-        return res
+    return res
 
 
 def double_period(df: pd.DataFrame) -> pd.DataFrame:
