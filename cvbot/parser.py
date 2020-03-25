@@ -19,8 +19,8 @@ class CVParseException(Exception):
     pass
 
 
-def parse_args_shlex(parser: argparse.ArgumentParser, cmd_str: str, skip: int = 1):
-    return parser.parse_args(shlex.split(cmd_str)[skip:])
+def parse_args_shlex(parser: argparse.ArgumentParser, cmd_str: str):
+    return parser.parse_args([s for s in shlex.split(cmd_str) if '<' not in s])
 
 
 class ErrorCatchingArgumentParser(argparse.ArgumentParser):

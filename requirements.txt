@@ -2,3 +2,4 @@ pyyaml
 pandas
 requests
 discord.py
+matplotlib
